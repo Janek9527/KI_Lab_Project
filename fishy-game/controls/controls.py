@@ -3,21 +3,19 @@ import arcade.key
 
 
 class PlayerControlsObject():
-    change_player_direction:typing.Callable
-    reset_game:typing.Callable
-    pause_game:typing.Callable
+    change_player_direction: typing.Callable
+    reset_game: typing.Callable
 
-    up_pressed:bool
-    down_pressed:bool
-    left_pressed:bool
-    right_pressed:bool
+    up_pressed: bool
+    down_pressed: bool
+    left_pressed: bool
+    right_pressed: bool
 
     most_recent_pressed = None
 
-    def __init__(self,change_player_direction:typing.Callable,reset_game:typing.Callable,pause_game:typing.Callable,b_keyboard=True,b_mouse=True,b_controller=False):
+    def __init__(self, change_player_direction: typing.Callable, reset_game: typing.Callable, b_keyboard=True, b_mouse=True, b_controller=False):
         self.change_player_direction = change_player_direction
         self.reset_game = reset_game
-        self.pause_game = pause_game
         self.reset_state()
 
     def reset_state(self):
@@ -26,7 +24,6 @@ class PlayerControlsObject():
         self.left_pressed = False
         self.right_pressed = False
         self.most_recent_pressed = None
-
 
     def update_direction_based_on_keyboard(self):
         y_vel = 0
@@ -49,9 +46,9 @@ class PlayerControlsObject():
                 x_vel = -1
             if self.most_recent_pressed == arcade.key.RIGHT:
                 x_vel = 1
-        self.change_player_direction((x_vel,y_vel))
+        self.change_player_direction((x_vel, y_vel))
 
-    def on_keyboard_press(self,key, modifiers):
+    def on_keyboard_press(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.W:
             self.up_pressed = True
         elif key == arcade.key.DOWN or key == arcade.key.S:
@@ -62,9 +59,8 @@ class PlayerControlsObject():
             self.right_pressed = True
         elif key == arcade.key.R or key == arcade.key.BACKSPACE:
             self.reset_game()
-            self.__init__(self.change_player_direction,self.reset_game,self.pause_game)
-        elif key == arcade.key.SPACE:
-            self.pause_game()
+            self.__init__(self.change_player_direction, self.reset_game)
+
         self.most_recent_pressed = key
         self.update_direction_based_on_keyboard()
 
@@ -79,4 +75,3 @@ class PlayerControlsObject():
             self.right_pressed = False
 
         self.update_direction_based_on_keyboard()
-

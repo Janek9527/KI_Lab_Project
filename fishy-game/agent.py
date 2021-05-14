@@ -1,12 +1,11 @@
-from game_class import run
-from arcade.application import Window
+from game_class import Game
 import time
 
 
 def get_episodes(num):
-    print(run())
-    time.sleep(3)
-    print(run())
+    game = Game()
+    for i in range(5000):
+        game.on_update(1.0/60.0)
 
 
 get_episodes(1)
