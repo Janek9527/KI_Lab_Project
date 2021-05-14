@@ -1,3 +1,4 @@
+import pyglet
 from game_constents import min_computer_fish_size, max_computer_fish_size, min_computer_fish_speed, max_computer_fish_speed, player_win_size, player_start_size
 from game_sprite_buttons import TextureButton
 import arcade
@@ -64,7 +65,7 @@ class GameWindow(arcade.Window):
         return SCREEN_WIDTH
 
     def __init__(self, width, height):
-        super().__init__(width, height, SCREEN_TITLE)
+        super().__init__(width, height, SCREEN_TITLE, gl_version=(4,6))
         self.max_fish = 0
         self.allowed_keys = [arcade.key.UP, arcade.key.DOWN,
                              arcade.key.LEFT, arcade.key.RIGHT]
@@ -133,20 +134,16 @@ class GameWindow(arcade.Window):
         arcade.start_render()
 
         left, right, bottom, top = arcade.get_window().get_viewport()
-        arcade.draw_lrwh_rectangle_textured(0, 0,
-                                            right, top,
-                                            self.background_texture)
+        #arcade.draw_lrwh_rectangle_textured(0, 0, right, top, self.background_texture)
         self.fish_sprites.draw(filter=GL_NEAREST)
 
-        self.ui_manager.on_draw()
+        #self.ui_manager.on_draw()
 
         # draw time
-        arcade.draw_text("time: {:.0f}".format(self.time_played), 20, self.height - 40, color=(
-            255, 240, 200, 210), font_size=25, bold=True, anchor_y="bottom", font_name="ariblk")
+        #arcade.draw_text("time: {:.0f}".format(self.time_played), 20, self.height - 40, color=(255, 240, 200, 210), font_size=25, bold=True, anchor_y="bottom", font_name="ariblk")
 
         # draw score (only wen game is lost)
-        arcade.draw_text("score: {:.0f}%".format((self.player_fish.size - player_start_size)/(player_win_size-player_start_size)*100), 20, self.height - 40,
-                         color=(255, 240, 200, 210), font_size=25, bold=True, anchor_y="top", font_name="ariblk")
+        #arcade.draw_text("score: {:.0f}%".format((self.player_fish.size - player_start_size)/(player_win_size-player_start_size)*100), 20, self.height - 40, color=(255, 240, 200, 210), font_size=25, bold=True, anchor_y="top", font_name="ariblk")
 
     last_time = None
 
@@ -216,7 +213,7 @@ class GameWindow(arcade.Window):
         self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
-            arcade.close_window()
+            self.close()
 
     @property
     def is_game_lost(self):
@@ -291,8 +288,13 @@ class GameWindow(arcade.Window):
 
 
 def run():
+    #import arcade
+    
     window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
-    arcade.set_window(window)
-    window.dispatch_events()
-    arcade.run()
+    print(window.context.get_info().get_version())
+    pyglet.app.run()
+    #arcade.set_window(window)
+    #print(arcade.get_window())
+    #window.dispatch_events()
+    #arcade.run()
     return window.episode
