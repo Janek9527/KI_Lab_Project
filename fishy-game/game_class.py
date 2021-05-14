@@ -1,3 +1,5 @@
+from game_constents import min_computer_fish_size, max_computer_fish_size, min_computer_fish_speed, max_computer_fish_speed, player_win_size, player_start_size
+from game_sprite_buttons import TextureButton
 import arcade
 import arcade.gui
 
@@ -7,25 +9,24 @@ from modifications_to_python_arcade.resizeable_window import ResizeableWindow
 from arcade.gui.ui_style import UIStyle
 import fish
 from controls import PlayerControlsObject
-from fish_generator import RandomFishGenerator,WaveFishGenerator,FishGenerator
+from fish_generator import RandomFishGenerator, WaveFishGenerator, FishGenerator
 import time
 import pickle
 import os
-from game_sprite_buttons import RestartGameButton,ContinueGameButton,YouWinPoster,ViewHighScoresButton,YouLosePoster
+from game_sprite_buttons import RestartGameButton, ContinueGameButton, YouWinPoster, ViewHighScoresButton, YouLosePoster
 import resources
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
-from game_sprite_buttons import TextureButton
 SCREEN_TITLE = "Eat or Be eaten"
-import resources
-from game_constents import min_computer_fish_size,max_computer_fish_size,min_computer_fish_speed,max_computer_fish_speed,player_win_size,player_start_size
 all_deltatimes = []
 
 num_of_high_scores = 5
 
-screen_size:list
+screen_size: list
 
-main_game_view:arcade.View
-game:ResizeableWindow
+main_game_view: arcade.View
+game: ResizeableWindow
+max_fish: int = 0
+
 
 class MainGameView(arcade.View):
     """
@@ -37,26 +38,28 @@ class MainGameView(arcade.View):
     """
 
     fish_sprites: arcade.SpriteList
-    ui_manager : ModifiedUIManager
+    ui_manager: ModifiedUIManager
     player_fish: fish.PlayerFish
-    paused:bool
+    paused: bool
 
     # buttons def
-    restart_button_game_lost:RestartGameButton
-    continue_button_paused:ContinueGameButton
-    continue_button_game_lost:ContinueGameButton
+    restart_button_game_lost: RestartGameButton
+    continue_button_paused: ContinueGameButton
+    continue_button_game_lost: ContinueGameButton
     you_win_poster: YouWinPoster
     you_lose_poster: YouLosePoster
     view_high_scores_button: ViewHighScoresButton
 
-    time_played:float
+    time_played: float
 
     controls_handler: PlayerControlsObject
 
     fish_generator: FishGenerator
 
-    b_did_win_already : bool
-    FLAG_open_high_scores_menue : int
+    b_did_win_already: bool
+    FLAG_open_high_scores_menue: int
+
+    max_fish: int
 
     @property
     def height(self):
@@ -82,33 +85,38 @@ class MainGameView(arcade.View):
         self.fish_sprites = arcade.SpriteList()
         self.ui_manager = ModifiedUIManager(self.window)
         self.player_fish = fish.PlayerFish(self)
-        self.fish_generator = RandomFishGenerator(1.1,self,min_fish_size=min_computer_fish_size,max_fish_size=max_computer_fish_size,min_fish_speed=min_computer_fish_speed,max_fish_speed=max_computer_fish_speed)
+        self.fish_generator = RandomFishGenerator(1.1, self, min_fish_size=min_computer_fish_size, max_fish_size=max_computer_fish_size,
+                                                  min_fish_speed=min_computer_fish_speed, max_fish_speed=max_computer_fish_speed)
         self.fish_sprites.append(self.player_fish)
         self.paused = False
         self.controls_handler = PlayerControlsObject(change_player_direction=self.player_fish.change_movement_direction,
                                                      reset_game=self.restart_game, pause_game=self.toggle_game_paused)
 
-        self.restart_button_game_lost = RestartGameButton(self,False)
+        self.restart_button_game_lost = RestartGameButton(self, False)
         self.restart_button_game_won = self.restart_button_game_lost
         self.ui_manager.add_ui_element(self.restart_button_game_won)
 
-        self.continue_button_paused = ContinueGameButton(self,False)
+        self.continue_button_paused = ContinueGameButton(self, False)
         self.ui_manager.add_ui_element(self.continue_button_paused)
 
-        self.you_win_poster = YouWinPoster(self,False)
-        self.you_win_poster.center_y += self.restart_button_game_won.height/2 + self.you_win_poster.height/2 + 10
+        self.you_win_poster = YouWinPoster(self, False)
+        self.you_win_poster.center_y += self.restart_button_game_won.height / \
+            2 + self.you_win_poster.height/2 + 10
         self.ui_manager.add_ui_element(self.you_win_poster)
 
-        self.you_lose_poster = YouLosePoster(self,False)
-        self.you_lose_poster.center_y = self.restart_button_game_lost.top + self.you_win_poster.height / 2 + 10
+        self.you_lose_poster = YouLosePoster(self, False)
+        self.you_lose_poster.center_y = self.restart_button_game_lost.top + \
+            self.you_win_poster.height / 2 + 10
         self.ui_manager.add_ui_element(self.you_lose_poster)
 
         self.continue_button_game_won = ContinueGameButton(self, False)
-        self.continue_button_game_won.center_y += -self.restart_button_game_won.height / 2 - self.continue_button_game_won.height / 2 - 10
+        self.continue_button_game_won.center_y += -self.restart_button_game_won.height / \
+            2 - self.continue_button_game_won.height / 2 - 10
         self.ui_manager.add_ui_element(self.continue_button_game_won)
 
-        self.view_high_scores_button = ViewHighScoresButton(self,True)
-        self.view_high_scores_button.center_x = self.window.width - self.view_high_scores_button.width/2 - 20
+        self.view_high_scores_button = ViewHighScoresButton(self, True)
+        self.view_high_scores_button.center_x = self.window.width - \
+            self.view_high_scores_button.width/2 - 20
         self.view_high_scores_button.center_y = self.view_high_scores_button.height / 2 + 20
         self.ui_manager.add_ui_element(self.view_high_scores_button)
 
@@ -135,13 +143,15 @@ class MainGameView(arcade.View):
         self.ui_manager.on_draw()
 
         # draw time
-        arcade.draw_text("time: {:.0f}".format(self.time_played),20,self.height - 40,color=(255,240,200,210),font_size=25,bold=True,anchor_y="bottom",font_name="ariblk")
+        arcade.draw_text("time: {:.0f}".format(self.time_played), 20, self.height - 40, color=(
+            255, 240, 200, 210), font_size=25, bold=True, anchor_y="bottom", font_name="ariblk")
 
-        #draw score (only wen game is lost)
+        # draw score (only wen game is lost)
         arcade.draw_text("score: {:.0f}%".format((self.player_fish.size - player_start_size)/(player_win_size-player_start_size)*100), 20, self.height - 40,
                          color=(255, 240, 200, 210), font_size=25, bold=True, anchor_y="top", font_name="ariblk")
 
     last_time = None
+
     def on_update(self, delta_time):
         """
         All the logic to move, and the game logic goes here.
@@ -159,6 +169,13 @@ class MainGameView(arcade.View):
         if not self.paused:
             self.fish_sprites.on_update(delta_time)
             self.fish_generator.update(delta_time)
+            max_fish = len(self.fish_sprites) if len(
+                self.fish_sprites) > max_fish else max_fish
+            print("max number of fish", max_fish)
+            # for sprite in self.fish_sprites:
+            # print("velo", sprite.velocity)
+            # print("size", sprite.size)
+            # print("pos", sprite.position)
             all_deltatimes.append(delta_time)
 
         if self.FLAG_open_high_scores_menue == 0:
@@ -208,7 +225,7 @@ class MainGameView(arcade.View):
         self.window.on_close()
 
     def switch_to_high_scores_view(self):
-        if not ( self.paused or self.b_did_win_already or self.is_game_lost ):
+        if not (self.paused or self.b_did_win_already or self.is_game_lost):
             self.toggle_game_paused()
         game.show_view(HighScoresView())
 
@@ -221,7 +238,7 @@ class MainGameView(arcade.View):
         self.window.height = int(self.window.width*ratio)
         return False
 
-    #UI
+    # UI
     def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
@@ -237,48 +254,56 @@ class MainGameView(arcade.View):
         """
         self.controls_handler.on_keyboard_release(key, key_modifiers)
 
-    def on_mouse_motion(self, *args,**kwargs):
-        self.ui_manager.on_mouse_motion(*args,**kwargs)
+    def on_mouse_motion(self, *args, **kwargs):
+        self.ui_manager.on_mouse_motion(*args, **kwargs)
 
     def on_mouse_press(self, *args, **kwargs):
-        self.ui_manager.on_mouse_press(*args,**kwargs)
+        self.ui_manager.on_mouse_press(*args, **kwargs)
 
     def on_mouse_release(self, *args, **kwargs):
-        self.ui_manager.on_mouse_release(*args,**kwargs)
+        self.ui_manager.on_mouse_release(*args, **kwargs)
+
 
 class HighScoresView(arcade.View):
-    text_input_box : arcade.gui.UIInputBox
-    text_output_box : arcade.gui.UILabel
-    high_scores_text_boxes : list
-    ui_manager : arcade.gui.UIManager
+    text_input_box: arcade.gui.UIInputBox
+    text_output_box: arcade.gui.UILabel
+    high_scores_text_boxes: list
+    ui_manager: arcade.gui.UIManager
 
-    rectangle_background : arcade.SpriteSolidColor
-    def __init__(self,new_high_score=None):
+    rectangle_background: arcade.SpriteSolidColor
+
+    def __init__(self, new_high_score=None):
         super().__init__()
         arcade.set_background_color(arcade.color.AZURE)
         self.ui_manager = arcade.gui.UIManager(self.window)
         self.uistyle = UIStyle.default_style()
         font_color = (30, 50, 50)
-        self.uistyle.set_class_attrs("label",font_color=font_color,font_color_hover=font_color,font_color_press=font_color)
+        self.uistyle.set_class_attrs(
+            "label", font_color=font_color, font_color_hover=font_color, font_color_press=font_color)
 
         title_texture = arcade.load_texture(r"resources\high scores.png")
-        self.title_poster = arcade.gui.UIImageButton(center_x=self.width / 2,center_y=self.height,normal_texture=title_texture,hover_texture=title_texture,press_texture=title_texture)
+        self.title_poster = arcade.gui.UIImageButton(
+            center_x=self.width / 2, center_y=self.height, normal_texture=title_texture, hover_texture=title_texture, press_texture=title_texture)
         self.title_poster.center_y -= self.title_poster.height/2
         self.ui_manager.add_ui_element(self.title_poster)
 
-        self.rectangle_background = arcade.SpriteSolidColor(self.width//2,self.height,(140,150,200))
+        self.rectangle_background = arcade.SpriteSolidColor(
+            self.width//2, self.height, (140, 150, 200))
         self.rectangle_background.center_x = self.width / 2
-        self.rectangle_background.center_y = self.height/ 2
-        self.line_background = arcade.SpriteSolidColor(10,int(self.title_poster.bottom - 70),(20,30,60))
+        self.rectangle_background.center_y = self.height / 2
+        self.line_background = arcade.SpriteSolidColor(
+            10, int(self.title_poster.bottom - 70), (20, 30, 60))
         self.line_background.center_x = self.width / 2
-        self.line_background.center_y = self.title_poster.bottom - self.line_background.height/2 - 30
+        self.line_background.center_y = self.title_poster.bottom - \
+            self.line_background.height/2 - 30
 
         # back button:
         back_button = arcade.gui.UIImageButton(center_x=0, center_y=0, normal_texture=resources.back_button_texture_map["mouse_out"], hover_texture=resources.back_button_texture_map["mouse_in"],
-                                 press_texture=resources.back_button_texture_map["mouse_pressed"])
+                                               press_texture=resources.back_button_texture_map["mouse_pressed"])
         back_button.center_x = self.width - back_button.width / 2 - 20
         back_button.center_y = self.height - back_button.height / 2 - 20
         self.ui_manager.add_ui_element(back_button)
+
         @back_button.event("on_click")
         def on_click():
             self.ui_manager.remove_handlers()
@@ -289,7 +314,8 @@ class HighScoresView(arcade.View):
         if new_high_score is not None:
             for index in range(len(high_scores)):
                 if new_high_score < self.try_parse(high_scores[index][1]):
-                    high_scores.insert(index,(None,"{:.3g}".format(new_high_score)))
+                    high_scores.insert(
+                        index, (None, "{:.3g}".format(new_high_score)))
                     high_scores.pop()
                     break
         self.draw_high_scores_table(high_scores)
@@ -309,26 +335,32 @@ class HighScoresView(arcade.View):
         except:
             return float("inf")
 
-    def draw_high_scores_table(self,high_scores:list):
-        self.names_boxes = [arcade.gui.UILabel(name,0,0, style=self.uistyle) if name is not None else
-                            self.create_input_box() for name,score in high_scores]
-        self.scores_boxes = [arcade.gui.UILabel(score,0,0, style=self.uistyle) for name,score in high_scores]
+    def draw_high_scores_table(self, high_scores: list):
+        self.names_boxes = [arcade.gui.UILabel(name, 0, 0, style=self.uistyle) if name is not None else
+                            self.create_input_box() for name, score in high_scores]
+        self.scores_boxes = [arcade.gui.UILabel(
+            score, 0, 0, style=self.uistyle) for name, score in high_scores]
         for i in range(len(self.names_boxes)):
             y = (self.names_boxes[i-1].center_y - self.names_boxes[i-1].height/2 if i > 0 else self.title_poster.bottom - 50)\
-                     - self.names_boxes[i-1].height / 2 - 20
+                - self.names_boxes[i-1].height / 2 - 20
             self.names_boxes[i].center_y = y
-            self.names_boxes[i].center_x = self.width/2 - self.names_boxes[i].width/2 - 30
+            self.names_boxes[i].center_x = self.width / \
+                2 - self.names_boxes[i].width/2 - 30
             self.scores_boxes[i].center_y = y
-            self.scores_boxes[i].center_x = self.width / 2 + self.scores_boxes[i].width / 2 + 30
+            self.scores_boxes[i].center_x = self.width / \
+                2 + self.scores_boxes[i].width / 2 + 30
             self.ui_manager.add_ui_element(self.names_boxes[i])
             self.ui_manager.add_ui_element(self.scores_boxes[i])
 
     def create_input_box(self):
-        ret = arcade.gui.UIInputBox(0, 0, (self.line_background.left - self.rectangle_background.left)//1.2, style=self.uistyle)
+        ret = arcade.gui.UIInputBox(
+            0, 0, (self.line_background.left - self.rectangle_background.left)//1.2, style=self.uistyle)
+
         @ret.event("on_enter")
         def on_enter():
-            ret.text.replace("\n","\\n")
-            high_scores = [(self.names_boxes[i].text,self.scores_boxes[i].text) for i in range(len(self.names_boxes))]
+            ret.text.replace("\n", "\\n")
+            high_scores = [(self.names_boxes[i].text, self.scores_boxes[i].text)
+                           for i in range(len(self.names_boxes))]
             self.save_high_scores(high_scores)
 
             # replace text box with label
@@ -337,13 +369,13 @@ class HighScoresView(arcade.View):
             new_label.center_y = ret.center_y
             new_label.center_x = self.width/2 - new_label.width/2 - 30
             index = self.names_boxes.index(ret)
-            high_scores[index] = (new_label,high_scores[index][1])
+            high_scores[index] = (new_label, high_scores[index][1])
             self.ui_manager.add_ui_element(new_label)
 
         self.ui_manager.focused_element = ret
         return ret
 
-    def save_high_scores(self,high_scores):
+    def save_high_scores(self, high_scores):
         with open("high_scores.pypickle", "wb+") as file:
             pickle.dump(high_scores, file)
 
@@ -355,7 +387,7 @@ class HighScoresView(arcade.View):
         else:
             high_scores = []
         while len(high_scores) < num_of_high_scores:
-            high_scores.append(("---","---"))
+            high_scores.append(("---", "---"))
         return high_scores[:num_of_high_scores]
 
     def on_draw(self):
@@ -371,21 +403,21 @@ class HighScoresView(arcade.View):
         self.window.height = int(self.window.width*ratio)
         return False
 
+
 def main():
     """ Main method """
-    global game,main_game_view,screen_size
-    game = ResizeableWindow(1000, 500, "Fishy Game",resizable=True)
+    global game, main_game_view, screen_size
+    game = ResizeableWindow(1000, 500, "Fishy Game", resizable=True)
     game.maximize()
     game.dispatch_events()
     screen_size = game.get_size()
     game.stretch_game_with_window = True
     # game.set_viewport(0, self.width, 0, self.height)
 
-
     main_game_view = MainGameView()
     game.show_view(main_game_view)
     arcade.run()
 
+
 if __name__ == "__main__":
     main()
-
