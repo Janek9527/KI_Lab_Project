@@ -18,18 +18,12 @@ from game_sprite_buttons import RestartGameButton, ContinueGameButton, YouWinPos
 import resources
 import numpy as np
 
-
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Eat or Be eaten"
 all_deltatimes = []
 key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
 num_of_high_scores = 5
-
-screen_size: list
-
-main_game_view: arcade.View
-game: Window
-max_fish: int = 0
+screen_size = (960,540)
 
 
 class MainGameView(arcade.View):
@@ -45,7 +39,7 @@ class MainGameView(arcade.View):
     ui_manager: ModifiedUIManager
     player_fish: fish.PlayerFish
     paused: bool
-    episodes: list
+    episode: list
 
     # buttons def
     restart_button_game_lost: RestartGameButton
@@ -79,6 +73,7 @@ class MainGameView(arcade.View):
         super().__init__()
         self.max_fish = 0
         self.allowed_keys = [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]
+        self.episode = []
         self.on_resize()
         self.restart_game()
 
@@ -170,14 +165,14 @@ class MainGameView(arcade.View):
         previous_fish_size = self.player_fish.size
 
         # Select random action
-        #action = np.random.choice(self.allowed_keys)
+        action = np.random.choice(self.allowed_keys)
 
         
         # Print selected key
-        #print(f'Selected key {key_dict[action]}')
+        print(f'Selected key {key_dict[action]}')
 
         # Execute selected action
-        #self.controls_handler.on_keyboard_press(action, None)
+        self.controls_handler.on_keyboard_press(action, None)
 
         # calculate delta_time
         if self.last_time is not None:
@@ -206,7 +201,6 @@ class MainGameView(arcade.View):
             all_deltatimes.append(delta_time)
 
         if self.FLAG_open_high_scores_menue == 0:
-            game.show_view(HighScoresView(self.time_played))
             self.FLAG_open_high_scores_menue = -1
         elif self.FLAG_open_high_scores_menue > 0:
             self.FLAG_open_high_scores_menue -= 1
@@ -224,6 +218,8 @@ class MainGameView(arcade.View):
 
         # Read reward
         reward = self.player_fish.size  - previous_fish_size
+
+        self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
             arcade.close_window()
@@ -308,163 +304,11 @@ class MainGameView(arcade.View):
     def on_mouse_release(self, *args, **kwargs):
         self.ui_manager.on_mouse_release(*args, **kwargs)
 
-
-class HighScoresView(arcade.View):
-    text_input_box: arcade.gui.UIInputBox
-    text_output_box: arcade.gui.UILabel
-    high_scores_text_boxes: list
-    ui_manager: arcade.gui.UIManager
-
-    rectangle_background: arcade.SpriteSolidColor
-
-    def __init__(self, new_high_score=None):
-        super().__init__()
-        arcade.set_background_color(arcade.color.AZURE)
-        self.ui_manager = arcade.gui.UIManager(self.window)
-        self.uistyle = UIStyle.default_style()
-        font_color = (30, 50, 50)
-        self.uistyle.set_class_attrs(
-            "label", font_color=font_color, font_color_hover=font_color, font_color_press=font_color)
-
-        title_texture = arcade.load_texture(r"resources\high scores.png")
-        self.title_poster = arcade.gui.UIImageButton(
-            center_x=self.width / 2, center_y=self.height, normal_texture=title_texture, hover_texture=title_texture, press_texture=title_texture)
-        self.title_poster.center_y -= self.title_poster.height/2
-        self.ui_manager.add_ui_element(self.title_poster)
-
-        self.rectangle_background = arcade.SpriteSolidColor(
-            self.width//2, self.height, (140, 150, 200))
-        self.rectangle_background.center_x = self.width / 2
-        self.rectangle_background.center_y = self.height / 2
-        self.line_background = arcade.SpriteSolidColor(
-            10, int(self.title_poster.bottom - 70), (20, 30, 60))
-        self.line_background.center_x = self.width / 2
-        self.line_background.center_y = self.title_poster.bottom - \
-            self.line_background.height/2 - 30
-
-        # back button:
-        back_button = arcade.gui.UIImageButton(center_x=0, center_y=0, normal_texture=resources.back_button_texture_map["mouse_out"], hover_texture=resources.back_button_texture_map["mouse_in"],
-                                               press_texture=resources.back_button_texture_map["mouse_pressed"])
-        back_button.center_x = self.width - back_button.width / 2 - 20
-        back_button.center_y = self.height - back_button.height / 2 - 20
-        self.ui_manager.add_ui_element(back_button)
-
-        @back_button.event("on_click")
-        def on_click():
-            self.ui_manager.remove_handlers()
-            self.ui_manager.purge_ui_elements()
-            game.show_view(main_game_view)
-
-        high_scores = self.load_high_scores()
-        if new_high_score is not None:
-            for index in range(len(high_scores)):
-                if new_high_score < self.try_parse(high_scores[index][1]):
-                    high_scores.insert(
-                        index, (None, "{:.3g}".format(new_high_score)))
-                    high_scores.pop()
-                    break
-        self.draw_high_scores_table(high_scores)
-
-    @property
-    def height(self):
-        return screen_size[1]
-
-    @property
-    def width(self):
-        return screen_size[0]
-
-    @staticmethod
-    def try_parse(s):
-        try:
-            return float(s)
-        except:
-            return float("inf")
-
-    def draw_high_scores_table(self, high_scores: list):
-        self.names_boxes = [arcade.gui.UILabel(name, 0, 0, style=self.uistyle) if name is not None else
-                            self.create_input_box() for name, score in high_scores]
-        self.scores_boxes = [arcade.gui.UILabel(
-            score, 0, 0, style=self.uistyle) for name, score in high_scores]
-        for i in range(len(self.names_boxes)):
-            y = (self.names_boxes[i-1].center_y - self.names_boxes[i-1].height/2 if i > 0 else self.title_poster.bottom - 50)\
-                - self.names_boxes[i-1].height / 2 - 20
-            self.names_boxes[i].center_y = y
-            self.names_boxes[i].center_x = self.width / \
-                2 - self.names_boxes[i].width/2 - 30
-            self.scores_boxes[i].center_y = y
-            self.scores_boxes[i].center_x = self.width / \
-                2 + self.scores_boxes[i].width / 2 + 30
-            self.ui_manager.add_ui_element(self.names_boxes[i])
-            self.ui_manager.add_ui_element(self.scores_boxes[i])
-
-    def create_input_box(self):
-        ret = arcade.gui.UIInputBox(
-            0, 0, (self.line_background.left - self.rectangle_background.left)//1.2, style=self.uistyle)
-
-        @ret.event("on_enter")
-        def on_enter():
-            ret.text.replace("\n", "\\n")
-            high_scores = [(self.names_boxes[i].text, self.scores_boxes[i].text)
-                           for i in range(len(self.names_boxes))]
-            self.save_high_scores(high_scores)
-
-            # replace text box with label
-            self.ui_manager._ui_elements.remove(ret)
-            new_label = arcade.gui.UILabel(ret.text, 0, 0, style=self.uistyle)
-            new_label.center_y = ret.center_y
-            new_label.center_x = self.width/2 - new_label.width/2 - 30
-            index = self.names_boxes.index(ret)
-            high_scores[index] = (new_label, high_scores[index][1])
-            self.ui_manager.add_ui_element(new_label)
-
-        self.ui_manager.focused_element = ret
-        return ret
-
-    def save_high_scores(self, high_scores):
-        with open("high_scores.pypickle", "wb+") as file:
-            pickle.dump(high_scores, file)
-
-    @staticmethod
-    def load_high_scores():
-        if os.path.exists("high_scores.pypickle"):
-            with open("high_scores.pypickle", "rb") as file:
-                high_scores = pickle.load(file)
-        else:
-            high_scores = []
-        while len(high_scores) < num_of_high_scores:
-            high_scores.append(("---", "---"))
-        return high_scores[:num_of_high_scores]
-
-    def on_draw(self):
-        """
-        Render the screen.
-        """
-        arcade.start_render()
-        self.rectangle_background.draw()
-        self.line_background.draw()
-
-    def on_resize(self, width: float = 0, height: float = 0):
-        ratio = self.height/self.width
-        self.window.height = int(self.window.width*ratio)
-        return False
-
-
-def main():
+def run(game_in: Window):
     """ Main method """
-    global game, main_game_view, screen_size
-    #game = ResizeableWindow(1000, 500, "Fishy Game", resizable=True)
-    game = Window(960, 540, "Fishy Game")
-    #game.maximize()
-    game.dispatch_events()
-    screen_size = game.get_size()
-    #game.stretch_game_with_window = True
-    # game.set_viewport(0, self.width, 0, self.height)
-
+    arcade.set_window(game_in)
     main_game_view = MainGameView()
-    game.show_view(main_game_view)
+    game_in.dispatch_events()
+    game_in.show_view(main_game_view)
     arcade.run()
-    print("Done")
-
-
-if __name__ == "__main__":
-    main()
+    return main_game_view.episode
