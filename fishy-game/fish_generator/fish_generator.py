@@ -59,45 +59,5 @@ class RandomFishGenerator(FishGenerator):
         new_fish = ComputerFish(game_object=self.game_object, is_facing_right=new_fish_is_on_left, x_pos=new_fish_x_pos, y_pos=new_fish_y_pos, size=new_fish_size,
                                 speed=new_fish_speed)
 
-        self.game_object.fish_sprites.append(new_fish)
-
-class WaveFishGenerator(FishGenerator):
-    generation_rate: float
-    game_object: "MyGame"
-    generation_timer: float  # timer until next fish generation in seconds
-
-    def __init__(self, generation_rate, game_object,
-                 fish_size=0.1,fish_speed=1000):
-        self.generation_rate = generation_rate
-        self.game_object = game_object
-        self.generation_timer = 2
-        self.fish_size = fish_size
-        self.fish_speed = fish_speed
-
-    def update(self, delta_t):
-        while True:
-            self.generation_timer -= delta_t
-            if self.generation_timer <= 0:
-                self.generation_timer += self.generation_rate
-                self.generate_wave_of_fish()
-            else:
-                break
-
-    def generate_wave_of_fish(self):
-        screen_height = self.game_object.height
-        screen_width = self.game_object.width
-        for new_fish_y_pos in range(0,screen_height,30):
-            # roll x_pos
-            new_fish_is_on_left = False
-            new_fish_x_pos = screen_width
-
-            # roll size
-            new_fish_size = self.fish_size
-
-            # roll speed
-            new_fish_speed = self.fish_speed
-
-            new_fish = ComputerFish(game_object=self.game_object, is_facing_right=new_fish_is_on_left, x_pos=new_fish_x_pos, y_pos=new_fish_y_pos, size=new_fish_size,
-                                    speed=new_fish_speed)
-
+        if len(self.game_object.fish_sprites) < 15:
             self.game_object.fish_sprites.append(new_fish)

@@ -7,24 +7,28 @@ from modifications_to_python_arcade.gui_manager import ModifiedUIManager
 from modifications_to_python_arcade.resizeable_window import ResizeableWindow
 
 from arcade.gui.ui_style import UIStyle
+from arcade.application import Window
 import fish
 from controls import PlayerControlsObject
-from fish_generator import RandomFishGenerator, WaveFishGenerator, FishGenerator
+from fish_generator import RandomFishGenerator, FishGenerator
 import time
 import pickle
 import os
 from game_sprite_buttons import RestartGameButton, ContinueGameButton, YouWinPoster, ViewHighScoresButton, YouLosePoster
 import resources
+import numpy as np
+
+
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Eat or Be eaten"
 all_deltatimes = []
-
+key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
 num_of_high_scores = 5
 
 screen_size: list
 
 main_game_view: arcade.View
-game: ResizeableWindow
+game: Window
 max_fish: int = 0
 
 
@@ -41,6 +45,7 @@ class MainGameView(arcade.View):
     ui_manager: ModifiedUIManager
     player_fish: fish.PlayerFish
     paused: bool
+    episodes: list
 
     # buttons def
     restart_button_game_lost: RestartGameButton
@@ -60,6 +65,7 @@ class MainGameView(arcade.View):
     FLAG_open_high_scores_menue: int
 
     max_fish: int
+    allowed_keys: list
 
     @property
     def height(self):
@@ -71,6 +77,8 @@ class MainGameView(arcade.View):
 
     def __init__(self):
         super().__init__()
+        self.max_fish = 0
+        self.allowed_keys = [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]
         self.on_resize()
         self.restart_game()
 
@@ -158,20 +166,39 @@ class MainGameView(arcade.View):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+
+        previous_fish_size = self.player_fish.size
+
+        # Select random action
+        #action = np.random.choice(self.allowed_keys)
+
+        
+        # Print selected key
+        #print(f'Selected key {key_dict[action]}')
+
+        # Execute selected action
+        #self.controls_handler.on_keyboard_press(action, None)
+
         # calculate delta_time
         if self.last_time is not None:
             delta_time = time.time() - self.last_time
         self.last_time = time.time()
+
+        delta_time = 1.0/60.0
+        #print(delta_time)
+        #time.sleep(0.5)
+
         if not self.is_game_lost and not self.b_did_win_already and not self.paused:
             self.time_played += delta_time
+
 
         # update game
         if not self.paused:
             self.fish_sprites.on_update(delta_time)
             self.fish_generator.update(delta_time)
-            max_fish = len(self.fish_sprites) if len(
-                self.fish_sprites) > max_fish else max_fish
-            print("max number of fish", max_fish)
+            self.max_fish = len(self.fish_sprites) if len(
+                self.fish_sprites) > self.max_fish else self.max_fish
+            # print("max number of fish", self.max_fish)
             # for sprite in self.fish_sprites:
             # print("velo", sprite.velocity)
             # print("size", sprite.size)
@@ -183,6 +210,24 @@ class MainGameView(arcade.View):
             self.FLAG_open_high_scores_menue = -1
         elif self.FLAG_open_high_scores_menue > 0:
             self.FLAG_open_high_scores_menue -= 1
+
+        # Read state
+        fishes = []
+        for index, fish in enumerate(self.fish_sprites):
+            fishes.append([fish.velocity[0], fish.velocity[1], fish.position[0], fish.position[1], fish.size])
+        
+        for i in range(len(fishes), 15):
+            fishes.append([0,0,0,0,0])
+
+        state = np.array(fishes)
+        #print(f'End velocity {self.player_fish.velocity}')
+
+        # Read reward
+        reward = self.player_fish.size  - previous_fish_size
+
+        if self.b_did_win_already or self.is_game_lost:
+            arcade.close_window()
+
 
     @property
     def is_game_lost(self):
@@ -407,16 +452,18 @@ class HighScoresView(arcade.View):
 def main():
     """ Main method """
     global game, main_game_view, screen_size
-    game = ResizeableWindow(1000, 500, "Fishy Game", resizable=True)
-    game.maximize()
+    #game = ResizeableWindow(1000, 500, "Fishy Game", resizable=True)
+    game = Window(960, 540, "Fishy Game")
+    #game.maximize()
     game.dispatch_events()
     screen_size = game.get_size()
-    game.stretch_game_with_window = True
+    #game.stretch_game_with_window = True
     # game.set_viewport(0, self.width, 0, self.height)
 
     main_game_view = MainGameView()
     game.show_view(main_game_view)
     arcade.run()
+    print("Done")
 
 
 if __name__ == "__main__":
