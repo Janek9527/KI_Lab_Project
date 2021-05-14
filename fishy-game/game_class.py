@@ -19,22 +19,16 @@ import resources
 import numpy as np
 
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
-SCREEN_TITLE = "Eat or Be eaten"
+SCREEN_TITLE = "Fishy Game"
+SCREEN_WIDTH = 960
+SCREEN_HEIGHT = 540
+
 all_deltatimes = []
 key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
 num_of_high_scores = 5
-screen_size = (960,540)
 
 
-class MainGameView(arcade.View):
-    """
-    Main application class.
-
-    NOTE: Go ahead and delete the methods you don't need.
-    If you do need a method, delete the 'pass' and replace it
-    with your own code. Don't leave 'pass' in this program.
-    """
-
+class GameWindow(arcade.Window):
     fish_sprites: arcade.SpriteList
     ui_manager: ModifiedUIManager
     player_fish: fish.PlayerFish
@@ -63,18 +57,19 @@ class MainGameView(arcade.View):
 
     @property
     def height(self):
-        return screen_size[1]
+        return SCREEN_HEIGHT
 
     @property
     def width(self):
-        return screen_size[0]
+        return SCREEN_WIDTH
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, width, height):
+        super().__init__(width, height, SCREEN_TITLE)
         self.max_fish = 0
-        self.allowed_keys = [arcade.key.UP, arcade.key.DOWN, arcade.key.LEFT, arcade.key.RIGHT]
+        self.allowed_keys = [arcade.key.UP, arcade.key.DOWN,
+                             arcade.key.LEFT, arcade.key.RIGHT]
         self.episode = []
-        self.on_resize()
+        # self.on_resize()
         self.restart_game()
 
     def restart_game(self):
@@ -86,7 +81,7 @@ class MainGameView(arcade.View):
         self.background_texture = resources.background_texture_map["idle"]
 
         self.fish_sprites = arcade.SpriteList()
-        self.ui_manager = ModifiedUIManager(self.window)
+        self.ui_manager = ModifiedUIManager()
         self.player_fish = fish.PlayerFish(self)
         self.fish_generator = RandomFishGenerator(1.1, self, min_fish_size=min_computer_fish_size, max_fish_size=max_computer_fish_size,
                                                   min_fish_speed=min_computer_fish_speed, max_fish_speed=max_computer_fish_speed)
@@ -118,7 +113,7 @@ class MainGameView(arcade.View):
         self.ui_manager.add_ui_element(self.continue_button_game_won)
 
         self.view_high_scores_button = ViewHighScoresButton(self, True)
-        self.view_high_scores_button.center_x = self.window.width - \
+        self.view_high_scores_button.center_x = arcade.get_window().width - \
             self.view_high_scores_button.width/2 - 20
         self.view_high_scores_button.center_y = self.view_high_scores_button.height / 2 + 20
         self.ui_manager.add_ui_element(self.view_high_scores_button)
@@ -137,7 +132,7 @@ class MainGameView(arcade.View):
         # the screen to the background color, and erase what we drew last frame.
         arcade.start_render()
 
-        left, right, bottom, top = self.window.get_viewport()
+        left, right, bottom, top = arcade.get_window().get_viewport()
         arcade.draw_lrwh_rectangle_textured(0, 0,
                                             right, top,
                                             self.background_texture)
@@ -167,7 +162,6 @@ class MainGameView(arcade.View):
         # Select random action
         action = np.random.choice(self.allowed_keys)
 
-        
         # Print selected key
         print(f'Selected key {key_dict[action]}')
 
@@ -180,12 +174,11 @@ class MainGameView(arcade.View):
         self.last_time = time.time()
 
         delta_time = 1.0/60.0
-        #print(delta_time)
-        #time.sleep(0.5)
+        # print(delta_time)
+        # time.sleep(0.5)
 
         if not self.is_game_lost and not self.b_did_win_already and not self.paused:
             self.time_played += delta_time
-
 
         # update game
         if not self.paused:
@@ -208,22 +201,22 @@ class MainGameView(arcade.View):
         # Read state
         fishes = []
         for index, fish in enumerate(self.fish_sprites):
-            fishes.append([fish.velocity[0], fish.velocity[1], fish.position[0], fish.position[1], fish.size])
-        
+            fishes.append([fish.velocity[0], fish.velocity[1],
+                           fish.position[0], fish.position[1], fish.size])
+
         for i in range(len(fishes), 15):
-            fishes.append([0,0,0,0,0])
+            fishes.append([0, 0, 0, 0, 0])
 
         state = np.array(fishes)
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
-        reward = self.player_fish.size  - previous_fish_size
+        reward = self.player_fish.size - previous_fish_size
 
         self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
             arcade.close_window()
-
 
     @property
     def is_game_lost(self):
@@ -258,28 +251,20 @@ class MainGameView(arcade.View):
             self.restart_button_game_won.is_visible = True
             self.b_did_win_already = True
 
-            high_scores = HighScoresView.load_high_scores()
-            if self.time_played < max([HighScoresView.try_parse(s[1]) for s in high_scores]):
-                self.FLAG_open_high_scores_menue = 1
-
     def on_close(self):
-        self.window.on_close()
-
-    def switch_to_high_scores_view(self):
-        if not (self.paused or self.b_did_win_already or self.is_game_lost):
-            self.toggle_game_paused()
-        game.show_view(HighScoresView())
+        arcade.get_window().on_close()
 
     def on_show_view(self):
         self.last_time = time.time()
         self.controls_handler.reset_state()
 
     def on_resize(self, width: float = 0, height: float = 0):
-        ratio = self.height/self.width
-        self.window.height = int(self.window.width*ratio)
-        return False
+        pass
+        # ratio = self.height/self.width
+        # arcade.get_window().height = int(arcade.get_window().width*ratio)
+        # return False
 
-    # UI
+        # UI
     def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
@@ -304,11 +289,10 @@ class MainGameView(arcade.View):
     def on_mouse_release(self, *args, **kwargs):
         self.ui_manager.on_mouse_release(*args, **kwargs)
 
-def run(game_in: Window):
-    """ Main method """
-    arcade.set_window(game_in)
-    main_game_view = MainGameView()
-    game_in.dispatch_events()
-    game_in.show_view(main_game_view)
+
+def run():
+    window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
+    arcade.set_window(window)
+    window.dispatch_events()
     arcade.run()
-    return main_game_view.episode
+    return window.episode

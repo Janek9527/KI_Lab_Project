@@ -1,15 +1,16 @@
 import typing
+
+import arcade
 from game_sprite_buttons.game_sprite_button_base_class import HideableGuiElement
 
 
 class ModifiedUIManager:
-    ui_elements : typing.List[HideableGuiElement]
+    ui_elements: typing.List[HideableGuiElement]
 
-    def __init__(self,window):
-        self.window = window
+    def __init__(self):
         self.ui_elements = []
 
-    def add_ui_element(self,v):
+    def add_ui_element(self, v):
         self.ui_elements.append(v)
 
     def on_draw(self):
@@ -19,8 +20,8 @@ class ModifiedUIManager:
 
     def transform_xy_to_game_coordinates(self, x, y):
         # apply x,y transformation for stretched applications
-        xv1, xv2, yv1, yv2 = self.window.get_viewport()  # load viewport rectangle
-        return xv1 + (x / self.window.width) * (xv2 - xv1), yv1 + (y / self.window.height) * (yv2 - yv1)
+        xv1, xv2, yv1, yv2 = arcade.get_window().get_viewport()  # load viewport rectangle
+        return xv1 + (x / arcade.get_window().width) * (xv2 - xv1), yv1 + (y / arcade.get_window().height) * (yv2 - yv1)
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         """
@@ -32,7 +33,7 @@ class ModifiedUIManager:
         x, y = self.transform_xy_to_game_coordinates(x, y)
 
         for e in self.ui_elements:
-            if e.is_visible and e.collides_with_point((x,y)):
+            if e.is_visible and e.collides_with_point((x, y)):
                 e.on_press()
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
@@ -45,7 +46,7 @@ class ModifiedUIManager:
         x, y = self.transform_xy_to_game_coordinates(x, y)
 
         for e in self.ui_elements:
-            if e.is_visible and e.collides_with_point((x,y)):
+            if e.is_visible and e.collides_with_point((x, y)):
                 e.on_release()
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
