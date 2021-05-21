@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
-      - name: tonybogdanov-zip
-        uses: TonyBogdanov/zip@1.0
+      - name: zip
+        run: zip fishy-game
         
       - name: ls
         run: ls -a
