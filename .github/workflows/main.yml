@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v2
         
       - name: ls
-        run: mkdir out && cp -r fishy-game out && zip -r out/fishygame.zip fishy-game
+        run: mkdir out && cp -r fishy-game out && zip -r out/fishygame.zip fishy-game && rm -r out/fishy-game && ls out
         
       - name: Azure Blob Storage Upload
         # You may pin to the exact commit or the version.
