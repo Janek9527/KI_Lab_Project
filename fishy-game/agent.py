@@ -1,11 +1,23 @@
 from game_class import Game
-import time
+import numpy as np
 
 
-def get_episodes(num):
-    game = Game()
-    for i in range(5000):
-        print(game.on_update(1.0/60.0))
+def get_episodes(num_episodes, max_episode_length):
+    episodes = []
+    for e in range(num_episodes):
+        game = Game()
+        states = []
+        rewards = []
+        for i in range(max_episode_length):
+            # Select random action
+            action = np.random.randint(0, 4)
+            state, reward, done = game.on_update(action)
+            states.append(state)
+            rewards.append(reward)
+            if(done):
+                break
+    episodes.append((states, rewards))
+    return episodes
 
 
-get_episodes(1)
+print(get_episodes(3, 5000))

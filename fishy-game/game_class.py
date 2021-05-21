@@ -12,7 +12,8 @@ SCREEN_WIDTH = 960
 SCREEN_HEIGHT = 540
 
 all_deltatimes = []
-key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
+key_keyname_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
+action_key_dict = {0: 65362, 1: 65364, 2: 65361, 3: 65363}
 num_of_high_scores = 5
 
 
@@ -66,17 +67,17 @@ class Game():
 
         self.FLAG_open_high_scores_menue = -1
 
-    def on_update(self, delta_time):
+    def on_update(self, action):
+        delta_time = 1.0/60.0
         previous_fish_size = self.player_fish.size
 
-        # Select random action
-        action = np.random.choice(self.allowed_keys)
-
+        key = action_key_dict[action]
+        keyname = key_keyname_dict[key]
         # Print selected key
-        print(f'Selected key {key_dict[action]}')
+        # print(f'Selected key {keyname}')
 
         # Execute selected action
-        self.controls_handler.on_keyboard_press(action, None)
+        self.controls_handler.on_keyboard_press(key, None)
 
         # calculate delta_time
         if self.last_time is not None:
@@ -122,13 +123,15 @@ class Game():
 
         # Read reward
         reward = self.player_fish.size - previous_fish_size
-        print((action, state, reward))
+
+        # print((action, state, reward))
+
         self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
-            return False    # game ended
+            return state, reward, True    # game ended
 
-        return True  # game not ended
+        return state, reward, False  # game not ended
 
     @property
     def is_game_lost(self):
