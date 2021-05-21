@@ -133,3 +133,7 @@ class Game():
     @property
     def is_game_lost(self):
         return not self.player_fish in self.fish_sprites
+
+    def handle_game_won(self):
+        if not self.b_did_win_already:
+            self.b_did_win_already = True
