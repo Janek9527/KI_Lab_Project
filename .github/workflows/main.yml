@@ -27,6 +27,9 @@ jobs:
       - name: tonybogdanov-zip
         uses: TonyBogdanov/zip@1.0
         
+      - name: ls
+        run: ls -a
+        
       - name: Azure Blob Storage Upload
         # You may pin to the exact commit or the version.
         # uses: bacongobbler/azure-blob-storage-upload@779a18b594a1a7cf5412645e06c856324a8b01e5
