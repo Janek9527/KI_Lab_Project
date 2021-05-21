@@ -4,7 +4,7 @@ from resources import player_fish_texture_map, restart_button_texture_map
 import typing
 if typing.TYPE_CHECKING:
     from game_class import MyGame
-from game_constents import player_fish_speed, player_start_size, player_win_size, player_start_size_acceleration_time_constant, player_final_size_acceleration_time_constant
+from constants import player_fish_speed, player_start_size, player_win_size, player_start_size_acceleration_time_constant, player_final_size_acceleration_time_constant
 
 
 class PlayerFish(Fish):
