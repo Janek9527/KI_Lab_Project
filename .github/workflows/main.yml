@@ -22,6 +22,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      
+      - name: ls1
+        run: ls
         
       - name: ls
         run: mkdir out && cp -r fishy-game out && zip -r out/fishygame.zip fishy-game && rm -r out/fishy-game && ls out
