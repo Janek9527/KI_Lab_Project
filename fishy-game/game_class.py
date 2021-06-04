@@ -4,6 +4,7 @@ from game_sprite_buttons import TextureButton
 import arcade
 import arcade.gui
 
+
 from modifications_to_python_arcade.gui_manager import ModifiedUIManager
 from modifications_to_python_arcade.resizeable_window import ResizeableWindow
 
@@ -18,6 +19,34 @@ import os
 from game_sprite_buttons import RestartGameButton, ContinueGameButton, YouWinPoster, ViewHighScoresButton, YouLosePoster
 import resources
 import numpy as np
+import torch
+import torch.nn as nn
+from torch import optim
+import random
+import numpy
+import math
+from collections import namedtuple, deque
+from itertools import count
+import torch.nn.functional as F
+import threading
+
+class Net(torch.nn.Module):
+    def __init__(self, D_in, H, D_out):
+        super(Net, self).__init__()
+        self.flatten1 = torch.nn.Flatten()
+        self.linear1 = torch.nn.Linear(D_in, H)
+        self.linear2 = torch.nn.Linear(H, D_out)
+
+    def forward(self, x):
+        print(x)
+        x = self.flatten1(x)
+        print(x)
+        h_relu = F.relu(self.linear1(x))
+        return self.linear2(h_relu)
+
+global model
+
+model = torch.load("./modelq2")
 
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Fishy Game"
@@ -26,6 +55,7 @@ SCREEN_HEIGHT = 540
 
 all_deltatimes = []
 key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
+action_key_dict = {0: 65362, 1: 65364, 2: 65361, 3: 65363}
 num_of_high_scores = 5
 
 
@@ -154,10 +184,24 @@ class GameWindow(arcade.Window):
         need it.
         """
 
+        global model
+
+        # Read state
+        fishes = []
+        for index, fish in enumerate(self.fish_sprites):
+            fishes.append([fish.velocity[0], fish.velocity[1],
+                           fish.position[0], fish.position[1], fish.size])
+
+        for i in range(len(fishes), 15):
+            fishes.append([0, 0, 0, 0, 0])
+
+        state = np.array(fishes)
+
         previous_fish_size = self.player_fish.size
 
         # Select random action
-        action = np.random.choice(self.allowed_keys)
+        action = action_key_dict[model(torch.tensor([state]).float()).argmax().item()]
+
 
         # Print selected key
         print(f'Selected key {key_dict[action]}')
@@ -195,16 +239,7 @@ class GameWindow(arcade.Window):
         elif self.FLAG_open_high_scores_menue > 0:
             self.FLAG_open_high_scores_menue -= 1
 
-        # Read state
-        fishes = []
-        for index, fish in enumerate(self.fish_sprites):
-            fishes.append([fish.velocity[0], fish.velocity[1],
-                           fish.position[0], fish.position[1], fish.size])
-
-        for i in range(len(fishes), 15):
-            fishes.append([0, 0, 0, 0, 0])
-
-        state = np.array(fishes)
+        
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
@@ -287,14 +322,11 @@ class GameWindow(arcade.Window):
         self.ui_manager.on_mouse_release(*args, **kwargs)
 
 
-def run():
-    #import arcade
-    
-    window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
-    print(window.context.get_info().get_version())
-    pyglet.app.run()
-    #arcade.set_window(window)
-    #print(arcade.get_window())
-    #window.dispatch_events()
-    #arcade.run()
-    return window.episode
+#import arcade
+window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
+print(window.context.get_info().get_version())
+pyglet.app.run()
+#arcade.set_window(window)
+#print(arcade.get_window())
+#window.dispatch_events()
+#arcade.run()
