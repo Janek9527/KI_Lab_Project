@@ -122,7 +122,10 @@ class Game():
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
-        reward = self.player_fish.size - previous_fish_size
+        if self.is_game_lost:
+            reward = -1000
+        else:
+            reward = (self.player_fish.size - previous_fish_size) * 100
 
         # print((action, state, reward))
 
