@@ -45,6 +45,12 @@ class Game():
     def width(self):
         return SCREEN_WIDTH
 
+    def calculate_distances(self):
+        player_fish = self.player_fish
+        other_fishes = self.fish_sprites[1:]
+        print(player_fish)
+        print(other_fishes)
+
     def __init__(self):
         self.max_fish = 0
         self.allowed_keys = [arcade.key.UP, arcade.key.DOWN,
@@ -68,6 +74,7 @@ class Game():
         self.FLAG_open_high_scores_menue = -1
 
     def on_update(self, action):
+        self.calculate_distances()
         delta_time = 1.0/10.0
         previous_fish_size = self.player_fish.size
 
@@ -125,8 +132,25 @@ class Game():
         if self.is_game_lost:
             reward = -1000
         else:
-            reward = 100 if (self.player_fish.size - previous_fish_size) > 0 else -1
+            pos_reward = 0
+            neg_reward = 0
+            smaller_fishes = list(filter(lambda x: x.size < self.player_fish.size, self.fish_sprites[1:]))
+            bigger_fishes = list(filter(lambda x: x.size >= self.player_fish.size, self.fish_sprites[1:]))
 
+            target_fish = sorted(smaller_fishes, key=lambda x: x.current_distance)
+            if len(target_fish) > 0 and target_fish[0].better_distance:
+                pos_reward = 10
+
+            dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 10 * x.size, bigger_fishes))
+
+            if len(dangerous_bigger_fish) > 0:
+                neg_reward = -11
+
+            if (self.player_fish.size - previous_fish_size) > 0:
+                pos_reward += 100
+
+            reward = pos_reward + neg_reward
+        print(reward)
         # print((action, state, reward))
 
         self.episode.append((action, state, reward))

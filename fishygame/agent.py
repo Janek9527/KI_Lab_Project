@@ -20,4 +20,4 @@ def get_episodes(num_episodes, max_episode_length):
     return episodes
 
 
-print(get_episodes(3, 5000))
+get_episodes(1, 200)
