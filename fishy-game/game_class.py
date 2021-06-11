@@ -35,18 +35,20 @@ class Net(torch.nn.Module):
         super(Net, self).__init__()
         self.flatten1 = torch.nn.Flatten()
         self.linear1 = torch.nn.Linear(D_in, H)
-        self.linear2 = torch.nn.Linear(H, D_out)
+        self.linear2 = torch.nn.Linear(H, H)
+        self.linear3 = torch.nn.Linear(H, H)
+        self.linear4 = torch.nn.Linear(H, D_out)
 
     def forward(self, x):
-        print(x)
         x = self.flatten1(x)
-        print(x)
-        h_relu = F.relu(self.linear1(x))
-        return self.linear2(h_relu)
+        h_relu1 = F.relu(self.linear1(x))
+        h_relu2 = F.relu(self.linear2(h_relu1))
+        h_relu3 = F.relu(self.linear3(h_relu2))
+        return self.linear4(h_relu3)
 
 global model
 
-model = torch.load("./modelq100")
+model = torch.load("./modeldist3700")
 
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Fishy Game"
@@ -199,6 +201,7 @@ class GameWindow(arcade.Window):
 
         previous_fish_size = self.player_fish.size
 
+        print(state)
         # Select random action
         action = action_key_dict[model(torch.tensor([state]).float()).argmax().item()]
 
@@ -216,7 +219,7 @@ class GameWindow(arcade.Window):
 
         delta_time = 1.0/60.0
         # print(delta_time)
-        # time.sleep(0.5)
+        #time.sleep(1/10.0)
 
         if not self.is_game_lost and not self.b_did_win_already and not self.paused:
             self.time_played += delta_time
