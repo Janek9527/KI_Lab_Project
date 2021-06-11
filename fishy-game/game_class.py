@@ -46,7 +46,7 @@ class Net(torch.nn.Module):
 
 global model
 
-model = torch.load("./modelq2")
+model = torch.load("./modelq100")
 
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Fishy Game"
