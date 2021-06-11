@@ -45,12 +45,6 @@ class Game():
     def width(self):
         return SCREEN_WIDTH
 
-    def calculate_distances(self):
-        player_fish = self.player_fish
-        other_fishes = self.fish_sprites[1:]
-        print(player_fish)
-        print(other_fishes)
-
     def __init__(self):
         self.max_fish = 0
         self.allowed_keys = [arcade.key.UP, arcade.key.DOWN,
@@ -150,7 +144,7 @@ class Game():
                 pos_reward += 100
 
             reward = pos_reward + neg_reward
-        print(reward)
+        #print(reward)
         # print((action, state, reward))
 
         self.episode.append((action, state, reward))
