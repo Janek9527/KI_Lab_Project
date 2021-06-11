@@ -68,7 +68,7 @@ class Game():
         self.FLAG_open_high_scores_menue = -1
 
     def on_update(self, action):
-        delta_time = 1.0/60.0
+        delta_time = 1.0/10.0
         previous_fish_size = self.player_fish.size
 
         key = action_key_dict[action]
@@ -84,7 +84,7 @@ class Game():
             delta_time = time.time() - self.last_time
         self.last_time = time.time()
 
-        delta_time = 1.0/60.0
+        delta_time = 1.0/10.0
         # print(delta_time)
         # time.sleep(0.5)
 
