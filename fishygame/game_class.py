@@ -68,7 +68,6 @@ class Game():
         self.FLAG_open_high_scores_menue = -1
 
     def on_update(self, action):
-        self.calculate_distances()
         delta_time = 1.0/10.0
         previous_fish_size = self.player_fish.size
 
