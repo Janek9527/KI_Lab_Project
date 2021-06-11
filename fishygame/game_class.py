@@ -125,7 +125,7 @@ class Game():
         if self.is_game_lost:
             reward = -1000
         else:
-            reward = (self.player_fish.size - previous_fish_size) * 100 * 100
+            reward = 100 if (self.player_fish.size - previous_fish_size) > 0 else -1
 
         # print((action, state, reward))
 
