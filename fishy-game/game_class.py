@@ -186,6 +186,8 @@ class GameWindow(arcade.Window):
 
         global model
 
+        input()
+
         # Read state
         fishes = []
         for index, fish in enumerate(self.fish_sprites):
@@ -199,7 +201,7 @@ class GameWindow(arcade.Window):
 
         previous_fish_size = self.player_fish.size
 
-        print(state)
+        #print(state)
         # Select random action
         action = action_key_dict[model(torch.tensor([state]).float()).argmax().item()]
 
@@ -244,7 +246,31 @@ class GameWindow(arcade.Window):
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
-        reward = self.player_fish.size - previous_fish_size
+        if self.is_game_lost:
+            reward = -1000
+        else:
+            reward = 100 if (self.player_fish.size - previous_fish_size) > 0 else -1
+            pos_reward = 0
+            neg_reward = 0
+            smaller_fishes = list(filter(lambda x: x.size < self.player_fish.size, self.fish_sprites[1:]))
+            bigger_fishes = list(filter(lambda x: x.size >= self.player_fish.size, self.fish_sprites[1:]))
+
+            target_fish = sorted(smaller_fishes, key=lambda x: x.current_distance)
+            if len(target_fish) > 0 and target_fish[0].better_distance:
+                pos_reward = 10
+                print(target_fish[0].size)
+
+            dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 100 * x.size, bigger_fishes))
+
+            if len(dangerous_bigger_fish) > 0:
+                neg_reward = -11
+
+            if (self.player_fish.size - previous_fish_size) > 0:
+                pos_reward += 100
+
+            reward = pos_reward + neg_reward
+
+        print(reward)
 
         self.episode.append((action, state, reward))
 
@@ -325,7 +351,7 @@ class GameWindow(arcade.Window):
 
 #import arcade
 window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
-print(window.context.get_info().get_version())
+#print(window.context.get_info().get_version())
 pyglet.app.run()
 #arcade.set_window(window)
 #print(arcade.get_window())
