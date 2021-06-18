@@ -240,8 +240,10 @@ class GameWindow(arcade.Window):
         elif self.FLAG_open_high_scores_menue > 0:
             self.FLAG_open_high_scores_menue -= 1
 
+        self.on_draw()
         
         #print(f'End velocity {self.player_fish.velocity}')
+        arcade.get_image().save(f'screenshot{str(random.randint(1, 100))}.png', 'PNG')
 
         # Read reward
         reward = self.player_fish.size - previous_fish_size
@@ -326,8 +328,14 @@ class GameWindow(arcade.Window):
 #import arcade
 window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
 print(window.context.get_info().get_version())
-pyglet.app.run()
-#arcade.set_window(window)
+#pyglet.app.run()
+arcade.set_window(window)
 #print(arcade.get_window())
-#window.dispatch_events()
-#arcade.run()
+window.dispatch_events()
+
+for i in range(1000):
+    print(i)
+    window.on_update(1/10)
+
+
+#pyglet.app.run()
