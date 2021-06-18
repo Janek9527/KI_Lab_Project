@@ -325,16 +325,16 @@ class GameWindow(arcade.Window):
 
 #print(window.context.get_info().get_version())
 #pyglet.app.run()
-window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
-arcade.set_window(window)
-window.dispatch_events()
+# window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
+# arcade.set_window(window)
+# window.dispatch_events()
 #print(arcade.get_window())
 
 
-for i in range(1000):
-    state_next, reward, done = window.on_update(0)
-    #Image.fromarray(state_next[0]).save(f'test{i}.png', 'PNG')
-    print(state_next, reward)
+# for i in range(1000):
+#     state_next, reward, done = window.on_update(0)
+#     #Image.fromarray(state_next[0]).save(f'test{i}.png', 'PNG')
+#     print(state_next, reward)
 
 
 #pyglet.app.run()
