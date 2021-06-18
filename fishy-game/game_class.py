@@ -36,19 +36,17 @@ class Net(torch.nn.Module):
         self.flatten1 = torch.nn.Flatten()
         self.linear1 = torch.nn.Linear(D_in, H)
         self.linear2 = torch.nn.Linear(H, H)
-        self.linear3 = torch.nn.Linear(H, H)
-        self.linear4 = torch.nn.Linear(H, D_out)
+        self.linear3 = torch.nn.Linear(H, D_out)
 
     def forward(self, x):
         x = self.flatten1(x)
         h_relu1 = F.relu(self.linear1(x))
         h_relu2 = F.relu(self.linear2(h_relu1))
-        h_relu3 = F.relu(self.linear3(h_relu2))
-        return self.linear4(h_relu3)
+        return self.linear3(h_relu2)
 
 global model
 
-model = torch.load("./modeldist3700")
+model = torch.load("./modeldistnew10000")
 
 GL_NEAREST = 9728  # open_gl scaling filter key for nearest neighbor
 SCREEN_TITLE = "Fishy Game"
