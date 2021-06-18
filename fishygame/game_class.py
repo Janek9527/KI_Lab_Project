@@ -134,7 +134,7 @@ class Game():
             if len(target_fish) > 0 and target_fish[0].better_distance:
                 pos_reward = 10
 
-            dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 10 * x.size, bigger_fishes))
+            dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 100 * x.size, bigger_fishes))
 
             if len(dangerous_bigger_fish) > 0:
                 neg_reward = -11
