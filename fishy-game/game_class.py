@@ -231,7 +231,7 @@ class GameWindow(arcade.Window):
             fishes.append([0, 0, 0, 0, 0])
 
         self.on_draw()
-        state = np.array([np.array(chan) for chan in arcade.get_image().split()[0:3]])
+        state = np.array([np.array(chan) for chan in arcade.get_image().split()[0:3]]) / 255
         arcade.get_image().save(f'screenshot{random.randint(1, 100)}.png', 'PNG')
         #print(f'End velocity {self.player_fish.velocity}')
 
@@ -349,10 +349,10 @@ window.dispatch_events()
 #print(arcade.get_window())
 
 
-#for i in range(1000):
-    #state_next, reward, done = window.on_update(0)
+for i in range(1000):
+    state_next, reward, done = window.on_update(0)
     #Image.fromarray(state_next[0]).save(f'test{i}.png', 'PNG')
-    #print(state_next.shape, reward)
+    print(state_next, reward)
 
 
 #pyglet.app.run()
