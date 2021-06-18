@@ -1,3 +1,5 @@
+import PIL
+from PIL import Image
 import pyglet
 from game_constents import min_computer_fish_size, max_computer_fish_size, min_computer_fish_speed, max_computer_fish_speed, player_win_size, player_start_size
 from game_sprite_buttons import TextureButton
@@ -229,7 +231,7 @@ class GameWindow(arcade.Window):
             fishes.append([0, 0, 0, 0, 0])
 
         self.on_draw()
-        state = np.array(arcade.get_image().getdata())
+        state = np.array([np.array(chan) for chan in arcade.get_image().split()[0:3]])
         arcade.get_image().save(f'screenshot{random.randint(1, 100)}.png', 'PNG')
         #print(f'End velocity {self.player_fish.velocity}')
 
@@ -338,16 +340,19 @@ class GameWindow(arcade.Window):
 
 
 #import arcade
-window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
-print(window.context.get_info().get_version())
-#pyglet.app.run()
-arcade.set_window(window)
-#print(arcade.get_window())
-window.dispatch_events()
 
-for i in range(1000):
-    state_next, reward, done = window.on_update(0)
-    print(state_next, reward)
+#print(window.context.get_info().get_version())
+#pyglet.app.run()
+window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
+arcade.set_window(window)
+window.dispatch_events()
+#print(arcade.get_window())
+
+
+#for i in range(1000):
+    #state_next, reward, done = window.on_update(0)
+    #Image.fromarray(state_next[0]).save(f'test{i}.png', 'PNG')
+    #print(state_next.shape, reward)
 
 
 #pyglet.app.run()
