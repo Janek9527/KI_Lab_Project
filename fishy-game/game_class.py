@@ -38,7 +38,6 @@ SCREEN_TITLE = "Fishy Game"
 SCREEN_WIDTH = 960
 SCREEN_HEIGHT = 540
 
-all_deltatimes = []
 key_keyname_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
 action_key_dict = {0: 65362, 1: 65364, 2: 65361, 3: 65363}
 num_of_high_scores = 5
@@ -49,7 +48,6 @@ class GameWindow(arcade.Window):
     ui_manager: ModifiedUIManager
     player_fish: fish.PlayerFish
     paused: bool
-    episode: list
 
     # buttons def
     restart_button_game_lost: RestartGameButton
@@ -84,7 +82,6 @@ class GameWindow(arcade.Window):
         self.max_fish = 0
         self.allowed_keys = [arcade.key.UP, arcade.key.DOWN,
                              arcade.key.LEFT, arcade.key.RIGHT]
-        self.episode = []
         # self.on_resize()
         self.restart_game()
 
@@ -197,7 +194,6 @@ class GameWindow(arcade.Window):
             # print("velo", sprite.velocity)
             # print("size", sprite.size)
             # print("pos", sprite.position)
-            all_deltatimes.append(delta_time)
 
         if self.FLAG_open_high_scores_menue == 0:
             self.FLAG_open_high_scores_menue = -1
@@ -242,8 +238,6 @@ class GameWindow(arcade.Window):
             reward = pos_reward + neg_reward
         #print(reward)
         # print((action, state, reward))
-
-        self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
             return state, reward, True    # game ended
