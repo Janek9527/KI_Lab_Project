@@ -54,7 +54,7 @@ SCREEN_WIDTH = 960
 SCREEN_HEIGHT = 540
 
 all_deltatimes = []
-key_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
+key_keyname_dict = {65362: 'UP', 65364: 'DOWN', 65361: 'LEFT', 65363: 'RIGHT'}
 action_key_dict = {0: 65362, 1: 65364, 2: 65361, 3: 65363}
 num_of_high_scores = 5
 
@@ -177,47 +177,26 @@ class GameWindow(arcade.Window):
 
     last_time = None
 
-    def on_update(self, delta_time):
-        """
-        All the logic to move, and the game logic goes here.
-        Normally, you'll call update() on the sprite lists that
-        need it.
-        """
-
-        global model
-
-        # Read state
-        fishes = []
-        for index, fish in enumerate(self.fish_sprites):
-            fishes.append([fish.velocity[0], fish.velocity[1],
-                           fish.position[0], fish.position[1], fish.size])
-
-        for i in range(len(fishes), 15):
-            fishes.append([0, 0, 0, 0, 0])
-
-        state = np.array(fishes)
-
+    def on_update(self, action):
+        delta_time = 1.0/10.0
         previous_fish_size = self.player_fish.size
 
-        print(state)
-        # Select random action
-        action = action_key_dict[model(torch.tensor([state]).float()).argmax().item()]
-
-
+        key = action_key_dict[action]
+        keyname = key_keyname_dict[key]
         # Print selected key
-        print(f'Selected key {key_dict[action]}')
+        # print(f'Selected key {keyname}')
 
         # Execute selected action
-        self.controls_handler.on_keyboard_press(action, None)
+        self.controls_handler.on_keyboard_press(key, None)
 
         # calculate delta_time
         if self.last_time is not None:
             delta_time = time.time() - self.last_time
         self.last_time = time.time()
 
-        delta_time = 1.0/60.0
+        delta_time = 1.0/10.0
         # print(delta_time)
-        #time.sleep(1/10.0)
+        # time.sleep(0.5)
 
         if not self.is_game_lost and not self.b_did_win_already and not self.paused:
             self.time_played += delta_time
@@ -240,18 +219,51 @@ class GameWindow(arcade.Window):
         elif self.FLAG_open_high_scores_menue > 0:
             self.FLAG_open_high_scores_menue -= 1
 
+        # Read state
+        fishes = []
+        for index, fish in enumerate(self.fish_sprites):
+            fishes.append([fish.velocity[0], fish.velocity[1],
+                           fish.position[0], fish.position[1], fish.size])
+
+        for i in range(len(fishes), 15):
+            fishes.append([0, 0, 0, 0, 0])
+
         self.on_draw()
-        
+        state = np.array(arcade.get_image().getdata())
+        arcade.get_image().save(f'screenshot{random.randint(1, 100)}.png', 'PNG')
         #print(f'End velocity {self.player_fish.velocity}')
-        arcade.get_image().save(f'screenshot{str(random.randint(1, 100))}.png', 'PNG')
 
         # Read reward
-        reward = self.player_fish.size - previous_fish_size
+        if self.is_game_lost:
+            reward = -1000
+        else:
+            pos_reward = 0
+            neg_reward = 0
+            smaller_fishes = list(filter(lambda x: x.size < self.player_fish.size, self.fish_sprites[1:]))
+            bigger_fishes = list(filter(lambda x: x.size >= self.player_fish.size, self.fish_sprites[1:]))
+
+            target_fish = sorted(smaller_fishes, key=lambda x: x.current_distance)
+            if len(target_fish) > 0 and target_fish[0].better_distance:
+                pos_reward = 10
+
+            dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 100 * x.size, bigger_fishes))
+
+            if len(dangerous_bigger_fish) > 0:
+                neg_reward = -20
+
+            if (self.player_fish.size - previous_fish_size) > 0:
+                pos_reward += 100
+
+            reward = pos_reward + neg_reward
+        #print(reward)
+        # print((action, state, reward))
 
         self.episode.append((action, state, reward))
 
         if self.b_did_win_already or self.is_game_lost:
-            self.close()
+            return state, reward, True    # game ended
+
+        return state, reward, False  # game not ended
 
     @property
     def is_game_lost(self):
@@ -334,8 +346,8 @@ arcade.set_window(window)
 window.dispatch_events()
 
 for i in range(1000):
-    print(i)
-    window.on_update(1/10)
+    state_next, reward, done = window.on_update(0)
+    print(state_next, reward)
 
 
 #pyglet.app.run()
