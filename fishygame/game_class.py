@@ -137,7 +137,7 @@ class Game():
             dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 100 * x.size, bigger_fishes))
 
             if len(dangerous_bigger_fish) > 0:
-                neg_reward = -11
+                neg_reward = -20
 
             if (self.player_fish.size - previous_fish_size) > 0:
                 pos_reward += 100
