@@ -176,7 +176,7 @@ class GameWindow(arcade.Window):
             delta_time = time.time() - self.last_time
         self.last_time = time.time()
 
-        delta_time = 1.0/10.0
+        delta_time = 1.0/60.0
         # print(delta_time)
         # time.sleep(0.5)
 
