@@ -112,13 +112,14 @@ class Game():
         # Read state
         fishes = []
         for index, fish in enumerate(self.fish_sprites):
-            fishes.append([fish.velocity[0], fish.velocity[1],
-                           fish.position[0], fish.position[1], fish.size])
+            fishes.append([fish.velocity[0]/500, fish.velocity[1]/500,
+                           (fish.position[0]/(SCREEN_WIDTH/2))-1, (fish.position[1]/(SCREEN_HEIGHT/2))-1, (fish.size-0.25)/3.45])
 
         for i in range(len(fishes), 15):
             fishes.append([0, 0, 0, 0, 0])
 
         state = np.array(fishes)
+        print(state)
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
