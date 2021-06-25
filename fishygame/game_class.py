@@ -119,7 +119,7 @@ class Game():
             fishes.append([0, 0, 0, 0, 0])
 
         state = np.array(fishes)
-        print(state)
+        #print(state)
         #print(f'End velocity {self.player_fish.velocity}')
 
         # Read reward
