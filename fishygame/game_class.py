@@ -124,7 +124,7 @@ class Game():
 
         # Read reward
         if self.is_game_lost:
-            reward = -1000
+            reward = -10
         else:
             pos_reward = 0
             neg_reward = 0
@@ -133,12 +133,12 @@ class Game():
 
             target_fish = sorted(smaller_fishes, key=lambda x: x.current_distance)
             if len(target_fish) > 0 and target_fish[0].better_distance:
-                pos_reward = 10
+                pos_reward = 1
 
             dangerous_bigger_fish = list(filter(lambda x:x.current_distance < 100 * x.size, bigger_fishes))
 
             if len(dangerous_bigger_fish) > 0:
-                neg_reward = -20
+                neg_reward = -2
 
             if (self.player_fish.size - previous_fish_size) > 0:
                 pos_reward += 100
